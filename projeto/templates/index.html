@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Modalidade Energética</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .input-group .hint {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .results-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .result-card.recommended {
+            border-left-color: #27ae60;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .modalidade-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .custo-total {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #e74c3c;
+            margin: 10px 0;
+        }
+
+        .demanda-info {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-badge {
+            background: #27ae60;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Análise de Modalidade Tarifárica</h1>
+            <p>Calcule a modalidade tarifária mais econômica para sua empresa</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <h2>Dados de Entrada</h2>
+                <div class="input-group">
+                    <label for="demanda_hfp">Demanda HFP (Fora Ponta)</label>
+                    <input type="text" id="demanda_hfp" placeholder="Ex: 165 166 168 161 161 136">
+                    <div class="hint">Valores históricos separados por espaço (kW)</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="demanda_hp">Demanda HP (Ponta)</label>
+                    <input type="text" id="demanda_hp" placeholder="Ex: 85 140 85 78 74 59">
+                    <div class="hint">Valores históricos separados por espaço (kW)</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="consumo_hp">Consumo HP (Ponta)</label>
+                    <input type="text" id="consumo_hp" placeholder="Ex: 3321 3198 2706 3075">
+                    <div class="hint">Valores históricos separados por espaço (kWh)</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="consumo_hfp">Consumo HFP (Fora Ponta)</label>
+                    <input type="text" id="consumo_hfp" placeholder="Ex: 37023 37638 34563 38253">
+                    <div class="hint">Valores históricos separados por espaço (kWh)</div>
+                </div>
+
+                <button class="btn" onclick="calcularModalidade()">
+                    📊 Calcular Modalidade Ótima
+                </button>
+
+                <div class="loading" id="loading">
+                    <p>🔄 Calculando melhor modalidade...</p>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2>Resultados da Análise</h2>
+                <div id="results-container">
+                    <p style="text-align: center; color: #6c757d;">
+                        Insira os dados e clique em calcular para ver os resultados
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function calcularModalidade() {
+            const demanda_hfp = document.getElementById('demanda_hfp').value;
+            const demanda_hp = document.getElementById('demanda_hp').value;
+            const consumo_hp = document.getElementById('consumo_hp').value;
+            const consumo_hfp = document.getElementById('consumo_hfp').value;
+
+            // Validação básica
+            if (!demanda_hfp || !demanda_hp || !consumo_hp || !consumo_hfp) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const resultsContainer = document.getElementById('results-container');
+            
+            loading.style.display = 'block';
+            resultsContainer.innerHTML = '';
+
+            try {
+                const response = await fetch('/calcular', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        demanda_hfp: demanda_hfp,
+                        demanda_hp: demanda_hp,
+                        consumo_hp: consumo_hp,
+                        consumo_hfp: consumo_hfp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsContainer.innerHTML = `
+                        <div class="error">
+                            ❌ ${data.error}
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Formatar resultados
+                const formatarMoeda = (valor) => {
+                    return new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(valor);
+                };
+
+                const isVerdeRecomendada = data.modalidade_recomendada === 'verde';
+
+                resultsContainer.innerHTML = `
+                    <div class="result-card ${isVerdeRecomendada ? 'recommended' : ''}">
+                        <div class="modalidade-title">
+                            Modalidade Verde 
+                            ${isVerdeRecomendada ? '<span class="success-badge">RECOMENDADA</span>' : ''}
+                        </div>
+                        <div class="custo-total">${formatarMoeda(data.verde.custo_total)}</div>
+                        <div><strong>Demanda Contratada:</strong> ${data.verde.demanda_contratada} kW</div>
+                        <div class="demanda-info">
+                            <div><strong>Custo Consumo:</strong> ${formatarMoeda(data.verde.custo_consumo)}</div>
+                            <div><strong>Custo Demanda:</strong> ${formatarMoeda(data.verde.custo_demanda)}</div>
+                        </div>
+                    </div>
+
+                    <div class="result-card ${!isVerdeRecomendada ? 'recommended' : ''}">
+                        <div class="modalidade-title">
+                            Modalidade Azul
+                            ${!isVerdeRecomendada ? '<span class="success-badge">RECOMENDADA</span>' : ''}
+                        </div>
+                        <div class="custo-total">${formatarMoeda(data.azul.custo_total)}</div>
+                        <div><strong>Demanda Ponta:</strong> ${data.azul.demanda_ponta} kW</div>
+                        <div><strong>Demanda Fora Ponta:</strong> ${data.azul.demanda_fora_ponta} kW</div>
+                        <div class="demanda-info">
+                            <div><strong>Custo Consumo:</strong> ${formatarMoeda(data.azul.custo_consumo)}</div>
+                            <div><strong>Custo Demanda Ponta:</strong> ${formatarMoeda(data.azul.custo_demanda_ponta)}</div>
+                            <div><strong>Custo Demanda Fora Ponta:</strong> ${formatarMoeda(data.azul.custo_demanda_fora_ponta)}</div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px;">
+                        <strong>Economia Anual Estimada:</strong> 
+                        ${formatarMoeda(Math.abs(data.verde.custo_total - data.azul.custo_total))}
+                    </div>
+                `;
+
+            } catch (error) {
+                resultsContainer.innerHTML = `
+                    <div class="error">
+                        ❌ Erro na comunicação com o servidor: ${error.message}
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Exemplo de dados para teste
+        //document.getElementById('demanda_hfp').value = '165 166 168 161 161 136 141 141 124 117 121 128';
+        //document.getElementById('demanda_hp').value = '85 140 85 78 74 59 68 76 50 62 70 43';
+        //document.getElementById('consumo_hp').value = '3321 3198 2706 3075 2337 1845 2829 2214 2460 2214 2214 246';
+        //document.getElementById('consumo_hfp').value = '37023 37638 34563 38253 30381 28905 30996 28290 28044 26322 25461 29274';
+    </script>
+</body>
+</html>
